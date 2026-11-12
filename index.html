@@ -30,6 +30,8 @@
   --hero-mark: #4CC9BD;
   --hot: #FFC000;
   --hot-ink: #22363A;
+  --mark: #00847F;
+  --mark-out: #879490;
   --font-mark: "Pacifico", "Brush Script MT", cursive;
   --font-body: "Poppins", "Segoe UI", system-ui, -apple-system, sans-serif;
   color-scheme: light;
@@ -56,6 +58,8 @@
     --hero-mark: #4CC9BD;
     --hot: #FFC000;
     --hot-ink: #22363A;
+    --mark: #38B2A6;
+    --mark-out: #5F7A75;
     color-scheme: dark;
   }
 }
@@ -80,6 +84,8 @@
   --hero-mark: #4CC9BD;
   --hot: #FFC000;
   --hot-ink: #22363A;
+  --mark: #38B2A6;
+  --mark-out: #5F7A75;
   color-scheme: dark;
 }
 
@@ -211,6 +217,40 @@ input[type="range"]::-moz-range-thumb {
 }
 .legend span.out::before { background: var(--muted); opacity: .45; }
 .legend span.you::before { width: 3px; height: 12px; border-radius: 2px; background: var(--ink); opacity: 1; }
+
+/* Detail after the reveal: similar situations and two charts */
+.detail { display: flex; flex-direction: column; gap: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.fig { display: flex; flex-direction: column; gap: 6px; }
+.fig h3 { font-size: 15px; line-height: 1.3; font-weight: 600; }
+.fig .sub { font-size: 12px; color: var(--muted); }
+.sim { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sim th {
+  text-align: right; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); padding: 2px 0 6px;
+}
+.sim td { text-align: right; padding: 8px 0; border-top: 1px solid var(--line); white-space: nowrap; }
+.sim th:first-child, .sim td:first-child { text-align: left; }
+.sim td.p { font-weight: 600; }
+.meter { display: inline-block; vertical-align: middle; width: 30px; height: 4px; border-radius: 2px; background: var(--band); margin-right: 6px; overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 2px; background: var(--mark); }
+.chart { position: relative; touch-action: pan-y; }
+.chart svg { display: block; overflow: visible; }
+.chart text { font-family: var(--font-body); font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.chart text.strong { fill: var(--ink); font-weight: 600; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .bar { fill: var(--mark); }
+.chart .bar.out { fill: var(--mark-out); }
+.chart .bar.on { opacity: .7; }
+.chart .you { stroke: var(--ink); }
+.tip {
+  position: absolute; top: -6px; transform: translate(-50%, -100%); pointer-events: none;
+  background: var(--ink); color: var(--surface); font-size: 12px; line-height: 1.3;
+  padding: 5px 8px; border-radius: 6px; white-space: nowrap;
+}
+.tip b { font-weight: 600; }
+.legend span.in::before { background: var(--mark); opacity: 1; }
+.legend span.off::before { background: var(--mark-out); opacity: 1; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* Verdict */
 .verdict { border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
@@ -345,17 +385,17 @@ footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line)
   var ROUNDS = [
     {
       title: "Arándano · EE. UU. · mayorista", terms: "FCA", kg: 16000,
-      lo: 6.3, hi: 8.7, step: 0.05, start: 6.6, min: 7.2, ref: 7.5, max: 7.8, seed: 11,
+      lo: 6.3, hi: 8.7, step: 0.05, start: 6.6, min: 7.2, ref: 7.5, max: 7.8, seed: 11, drift: 0.55,
       reports: [["Reporte de mercado · hace 9 días", 6.9], ["Reporte interno · hace 4 días", 7.8], ["Fuente externa · ayer", 7.2]]
     },
     {
       title: "Palta Hass · Europa · supermercado", terms: "CIF", kg: 22000,
-      lo: 1.8, hi: 2.6, step: 0.01, start: 2.5, min: 2.1, ref: 2.2, max: 2.3, seed: 23,
+      lo: 1.8, hi: 2.6, step: 0.01, start: 2.5, min: 2.1, ref: 2.2, max: 2.3, seed: 23, drift: -0.14,
       reports: [["Reporte de mercado · hace 12 días", 2.4], ["Reporte interno · hace 5 días", 2.05], ["Fuente externa · hace 2 días", 1.9]]
     },
     {
       title: "Arándano · Europa · mayorista", terms: "FCA", kg: 12000,
-      lo: 7.5, hi: 10.3, step: 0.05, start: 8.0, min: 8.55, ref: 8.9, max: 9.25, seed: 37,
+      lo: 7.5, hi: 10.3, step: 0.05, start: 8.0, min: 8.55, ref: 8.9, max: 9.25, seed: 37, drift: 0.35,
       reports: [["Reporte de mercado · hace 7 días", 9.4], ["Reporte interno · hace 3 días", 8.3], ["Fuente externa · ayer", 8.8]]
     }
   ];
@@ -388,7 +428,194 @@ footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line)
     return pts;
   }
 
+  function seeded(seed) {
+    var s = seed;
+    return function () { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; };
+  }
+
+  // Five illustrative similar situations, taken from the comparables inside the range.
+  function similar(r, pts) {
+    var rnd = seeded(r.seed + 101), inside = pts.filter(function (p) { return p.inside; });
+    var sims = [97, 95, 92, 90, 87], weeks = [2, 5, 9, 14, 22];
+    return sims.map(function (s, k) {
+      return {
+        sim: s,
+        weeks: weeks[k] + Math.floor(rnd() * 3),
+        kg: Math.round(r.kg * (0.88 + 0.24 * rnd()) / 100) * 100,
+        v: round2(inside[(k * 5 + 2) % inside.length].v)
+      };
+    });
+  }
+
+  // Twelve weekly reference prices ending at today's reference, with the range around each.
+  function trend(r) {
+    var rnd = seeded(r.seed + 202), half = (r.max - r.min) / 2, out = [], v = r.ref, k;
+    for (k = 11; k >= 0; k--) {
+      var hw = half * (0.85 + 0.4 * rnd());
+      if (k === 11) hw = half;
+      out[k] = { ref: v, lo: v - hw, hi: v + hw };
+      v = v - r.drift / 11 + (rnd() - 0.5) * (r.hi - r.lo) * 0.06;
+      v = Math.min(r.hi - half * 1.4, Math.max(r.lo + half * 1.4, v));
+    }
+    return out;
+  }
+
+  var NS = "http://www.w3.org/2000/svg";
+  function svg(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag), k;
+    for (k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function label(parent, x, y, text, anchor, strong) {
+    var t = svg("text", { x: x, y: y, "text-anchor": anchor || "middle" }, parent);
+    if (strong) t.setAttribute("class", "strong");
+    t.textContent = text;
+    return t;
+  }
+  function tipFor(box, W) {
+    var tip = el("div", "tip"); tip.hidden = true; box.appendChild(tip);
+    return {
+      show: function (x, strong, rest) {
+        tip.textContent = "";
+        var b = document.createElement("b"); b.textContent = strong;
+        tip.appendChild(b); tip.appendChild(document.createTextNode(rest));
+        tip.style.left = Math.min(W - 78, Math.max(78, x)) + "px";
+        tip.hidden = false;
+      },
+      hide: function () { tip.hidden = true; }
+    };
+  }
+  function srTable(box, caption, head, rows) {
+    var t = el("table", "sr"), tr = el("tr");
+    t.appendChild(el("caption")).textContent = caption;
+    head.forEach(function (x) { tr.appendChild(el("th")).textContent = x; });
+    t.appendChild(tr);
+    rows.forEach(function (row) {
+      var r2 = el("tr");
+      row.forEach(function (x) { r2.appendChild(el("td")).textContent = x; });
+      t.appendChild(r2);
+    });
+    box.appendChild(t);
+  }
+
+  // Columns of comparables by price. Same horizontal scale as the strip above it.
+  function histogram(box, r, pts) {
+    var W = box.clientWidth || 300, H = 126, top = 18, base = H - 20;
+    var s = svg("svg", { width: W, height: H, role: "img", "aria-label": "Reparto de precios de los comparables" }, box);
+    function x(v) { return 14 + (v - r.lo) / (r.hi - r.lo) * (W - 28); }
+    var bw = (r.max - r.min) / 4, below = Math.round((r.min - r.lo) / bw), n = Math.round((r.hi - r.lo) / bw);
+    var e0 = r.min - below * bw, counts = [], i, top1 = 1;
+    for (i = 0; i < n; i++) counts[i] = 0;
+    pts.forEach(function (p) {
+      var k = Math.min(n - 1, Math.max(0, Math.floor((p.v - e0) / bw + 1e-9)));
+      counts[k] += 1;
+    });
+    counts.forEach(function (c) { if (c > top1) top1 = c; });
+    function y(c) { return base - c / top1 * (base - top); }
+    var step = top1 > 6 ? 5 : 2, g;
+    for (g = step; g <= top1; g += step) {
+      svg("line", { x1: 0, x2: W, y1: y(g), y2: y(g), "class": "grid" }, s);
+      label(s, 0, y(g) - 3, String(g), "start");
+    }
+    var tip = tipFor(box, W), bars = [], rows = [];
+    counts.forEach(function (c, k) {
+      var a = e0 + k * bw, b = a + bw, x0 = x(a) + 1, x1 = x(b) - 1, inside = a >= r.min - 1e-9 && b <= r.max + 1e-9;
+      if (x1 - x0 > 24) { var mid = (x0 + x1) / 2; x0 = mid - 12; x1 = mid + 12; }
+      rows.push([price(a) + " a " + price(b), String(c), inside ? "Dentro" : "Fuera"]);
+      if (c > 0) {
+        var yt = y(c), rad = Math.min(4, base - yt, (x1 - x0) / 2);
+        bars[k] = svg("path", {
+          "class": inside ? "bar" : "bar out",
+          d: "M" + x0 + "," + base + "V" + (yt + rad) + "Q" + x0 + "," + yt + " " + (x0 + rad) + "," + yt +
+             "H" + (x1 - rad) + "Q" + x1 + "," + yt + " " + x1 + "," + (yt + rad) + "V" + base + "Z"
+        }, s);
+      }
+    });
+    svg("line", { x1: 0, x2: W, y1: base, y2: base, "class": "grid" }, s);
+    label(s, x(r.min), base + 14, price(r.min));
+    label(s, x(r.ref), base + 14, price(r.ref), "middle", true);
+    label(s, x(r.max), base + 14, price(r.max));
+    var you = svg("line", { y1: top - 4, y2: base, "class": "you", "stroke-width": 2 }, s);
+    var youT = label(s, 0, top - 8, "Tú", "middle", true);
+    counts.forEach(function (c, k) {
+      var a = e0 + k * bw, hit = svg("rect", { x: x(a), y: 0, width: x(a + bw) - x(a), height: base, fill: "transparent" }, s);
+      function on() {
+        bars.forEach(function (bar) { if (bar) bar.classList.remove("on"); });
+        if (bars[k]) bars[k].classList.add("on");
+        tip.show(x(a + bw / 2), c + (c === 1 ? " pedido" : " pedidos"), " · " + price(a) + " a " + price(a + bw));
+      }
+      hit.addEventListener("pointerenter", on);
+      hit.addEventListener("pointerdown", on);
+    });
+    s.addEventListener("pointerleave", function () {
+      bars.forEach(function (bar) { if (bar) bar.classList.remove("on"); });
+      tip.hide();
+    });
+    srTable(box, "Comparables por precio", ["USD/kg", "Pedidos", "Rango"], rows);
+    return function (v) {
+      you.setAttribute("x1", x(v)); you.setAttribute("x2", x(v));
+      youT.setAttribute("x", Math.min(W - 10, Math.max(10, x(v))));
+    };
+  }
+
+  // Reference price over twelve weeks with the range as a band; your price as a threshold line.
+  function trendChart(box, r, data) {
+    var W = box.clientWidth || 300, H = 150, left = 34, right = W - 42, top = 10, base = H - 22;
+    var s = svg("svg", { width: W, height: H, role: "img", "aria-label": "Referencia y rango de las últimas 12 semanas" }, box);
+    function x(i) { return left + i / 11 * (right - left); }
+    function y(v) { return base - (v - r.lo) / (r.hi - r.lo) * (base - top); }
+    var span = r.hi - r.lo, step = span > 2 ? 0.5 : span > 1 ? 0.25 : 0.2, t;
+    for (t = Math.ceil(r.lo / step - 1e-9) * step; t <= r.hi + 1e-9; t += step) {
+      svg("line", { x1: left, x2: right, y1: y(t), y2: y(t), "class": "grid" }, s);
+      label(s, left - 6, y(t) + 4, price(t), "end");
+    }
+    var up = data.map(function (d, i) { return x(i) + "," + y(d.hi); });
+    var down = data.map(function (d, i) { return x(i) + "," + y(d.lo); }).reverse();
+    svg("polygon", { points: up.concat(down).join(" "), fill: "var(--mark)", opacity: 0.14 }, s);
+    svg("polyline", {
+      points: data.map(function (d, i) { return x(i) + "," + y(d.ref); }).join(" "),
+      fill: "none", stroke: "var(--mark)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round"
+    }, s);
+    var you = svg("line", { x1: left, x2: right, "class": "you", "stroke-width": 1.5, "stroke-dasharray": "5 4" }, s);
+    var youT = label(s, left + 4, 0, "Tu precio", "start", true);
+    var cross = svg("line", { y1: top, y2: base, "class": "you", "stroke-width": 1, visibility: "hidden" }, s);
+    svg("circle", { cx: x(11), cy: y(r.ref), r: 4.5, fill: "var(--mark)", stroke: "var(--surface)", "stroke-width": 2 }, s);
+    label(s, x(11) + 9, y(r.ref) + 4, price(r.ref), "start", true);
+    label(s, x(0), base + 16, "hace 11 sem", "start");
+    label(s, x(11), base + 16, "hoy");
+    var tip = tipFor(box, W);
+    var hit = svg("rect", { x: left - 6, y: 0, width: right - left + 12, height: base, fill: "transparent" }, s);
+    function move(ev) {
+      var box2 = s.getBoundingClientRect(), px = (ev.clientX - box2.left) * (W / box2.width);
+      var i = Math.min(11, Math.max(0, Math.round((px - left) / (right - left) * 11))), d = data[i];
+      cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
+      tip.show(x(i), price(d.ref), " · " + (i === 11 ? "hoy" : "hace " + (11 - i) + " sem") + " · rango " + price(d.lo) + " a " + price(d.hi));
+    }
+    hit.addEventListener("pointermove", move);
+    hit.addEventListener("pointerdown", move);
+    s.addEventListener("pointerleave", function () { cross.setAttribute("visibility", "hidden"); tip.hide(); });
+    srTable(box, "Referencia y rango por semana", ["Semana", "Referencia", "Mínimo", "Máximo"],
+      data.map(function (d, i) { return [i === 11 ? "hoy" : "hace " + (11 - i) + " sem", price(d.ref), price(d.lo), price(d.hi)]; }));
+    return function (v) {
+      var yy = y(v);
+      you.setAttribute("y1", yy); you.setAttribute("y2", yy);
+      youT.setAttribute("y", yy < top + 16 ? yy + 14 : yy - 5);
+    };
+  }
+
   var game = document.getElementById("game");
+  // Charts are drawn at the real pixel width, so they are drawn again when that width changes.
+  var redraw = null, drawnAt = 0, resizeTimer = null;
+  function widthChanged() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      var box = document.querySelector("#game .chart");
+      if (redraw && box && box.clientWidth !== drawnAt) redraw();
+    }, 120);
+  }
+  window.addEventListener("resize", widthChanged);
+  if (window.ResizeObserver) new ResizeObserver(widthChanged).observe(game);
   var state = { i: 0, open: false, blind: [] };
 
   function price(n) { return n.toFixed(2).replace(".", ","); }
@@ -417,6 +644,8 @@ footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line)
     var r = ROUNDS[state.i];
     var last = state.i === ROUNDS.length - 1;
     game.innerHTML = "";
+    redraw = null;
+    var detailUpdate = [];
 
     var head = el("div", "row");
     head.appendChild(el("span", "step", "Pedido " + (state.i + 1) + " de " + ROUNDS.length));
@@ -472,6 +701,7 @@ footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line)
       if (state.open) {
         var vd = verdictHtml(r, v);
         verdict.className = vd.cls; verdict.innerHTML = vd.html;
+        detailUpdate.forEach(function (fn) { fn(v); });
       }
     }
     function nudge(d) {
@@ -492,7 +722,8 @@ footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line)
         band.style.left = pct(r, r.min);
         band.style.width = ((r.max - r.min) / (r.hi - r.lo) * 100) + "%";
         inner.insertBefore(band, me);
-        comparables(r).forEach(function (p) {
+        var pts = comparables(r);
+        pts.forEach(function (p) {
           var d = el("div", p.inside ? "dot" : "dot out");
           d.style.left = pct(r, p.v);
           d.style.top = p.y + "px";
@@ -510,7 +741,44 @@ footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line)
         blind.hidden = false;
         blind.textContent = "A ciegas pusiste USD " + price(state.blind[state.i]) + "/kg. Con Coti AI verías este rango antes de cerrar. Mueve el precio y pruébalo.";
         btn.textContent = last ? "Ver mi resultado" : "Siguiente pedido";
-        paint();
+
+        var detail = el("div", "detail");
+        detail.appendChild(el("span", "label", "Lo que verías en Coti AI"));
+
+        var f1 = el("div", "fig");
+        f1.appendChild(el("h3", null, "Situaciones más parecidas"));
+        var tb = el("table", "sim num");
+        tb.appendChild(el("tr", null, "<th>Cuándo</th><th>Volumen</th><th>USD/kg</th><th>Parecido</th>"));
+        similar(r, pts).forEach(function (row) {
+          tb.appendChild(el("tr", null,
+            "<td>hace " + row.weeks + " sem</td><td>" + whole(row.kg) + " kg</td><td class=\"p\">" + price(row.v) +
+            "</td><td><span class=\"meter\"><i style=\"width:" + row.sim + "%\"></i></span>" + row.sim + " %</td>"));
+        });
+        f1.appendChild(tb);
+        detail.appendChild(f1);
+
+        var f2 = el("div", "fig");
+        f2.appendChild(el("h3", null, "Reparto de los " + pts.length + " comparables"));
+        f2.appendChild(el("p", "sub", "Pedidos por precio, USD/kg"));
+        var c2 = el("div", "chart"); f2.appendChild(c2);
+        f2.appendChild(el("div", "legend", "<span class=\"in\">Dentro del rango</span><span class=\"off\">Fuera</span><span class=\"you\">Tu precio</span>"));
+        detail.appendChild(f2);
+
+        var f3 = el("div", "fig");
+        f3.appendChild(el("h3", null, "Referencia de las últimas 12 semanas"));
+        f3.appendChild(el("p", "sub", "Línea: referencia. Franja: rango. USD/kg"));
+        var c3 = el("div", "chart"); f3.appendChild(c3);
+        detail.appendChild(f3);
+        game.appendChild(detail);
+
+        var series = trend(r);
+        redraw = function () {
+          c2.innerHTML = ""; c3.innerHTML = "";
+          drawnAt = c2.clientWidth;
+          detailUpdate = [histogram(c2, r, pts), trendChart(c3, r, series)];
+          paint();
+        };
+        redraw();
       } else if (!last) {
         state.i += 1; state.open = false;
         renderRound();
@@ -527,6 +795,7 @@ footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line)
   function renderTally() {
     var hits = 0, dist = 0;
     game.innerHTML = "";
+    redraw = null;
     var head = el("div", "row");
     head.appendChild(el("span", "step", "Tu resultado a ciegas"));
     head.appendChild(el("span", "chip", "ILUSTRATIVO"));
