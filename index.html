@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coti AI demo de cotización</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: one phone-width column. Game card first, one-page summary below. Colours and fonts follow the pitch deck. */
+:root {
+  --bg: #F2F3EC;
+  --surface: #FFFFFF;
+  --ink: #22363A;
+  --muted: #5E6C68;
+  --head: #0B524C;
+  --accent: #00847F;
+  --band: #DDE2BE;
+  --line: #D5DAC9;
+  --btn-bg: #0B524C;
+  --btn-ink: #FFFFFF;
+  --ok: #007A3D;
+  --ok-bg: #E3F1E4;
+  --warn: #A85F00;
+  --warn-bg: #FCF8C9;
+  --font-mark: "Pacifico", "Brush Script MT", cursive;
+  --font-body: "Poppins", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0C1F1E;
+    --surface: #132C2A;
+    --ink: #EEF1E4;
+    --muted: #9DB0AB;
+    --head: #DDE2BE;
+    --accent: #4CC9BD;
+    --band: #2C4A3F;
+    --line: #264643;
+    --btn-bg: #4CC9BD;
+    --btn-ink: #062624;
+    --ok: #6FD08C;
+    --ok-bg: #173A26;
+    --warn: #F0B45A;
+    --warn-bg: #3A2E12;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0C1F1E;
+  --surface: #132C2A;
+  --ink: #EEF1E4;
+  --muted: #9DB0AB;
+  --head: #DDE2BE;
+  --accent: #4CC9BD;
+  --band: #2C4A3F;
+  --line: #264643;
+  --btn-bg: #4CC9BD;
+  --btn-ink: #062624;
+  --ok: #6FD08C;
+  --ok-bg: #173A26;
+  --warn: #F0B45A;
+  --warn-bg: #3A2E12;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.page {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { text-wrap: balance; color: var(--head); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Header */
+.top { display: flex; flex-direction: column; gap: 8px; }
+.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.mark { font-family: var(--font-mark); font-size: 30px; line-height: 1.2; color: var(--accent); }
+.event { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-size: 28px; line-height: 1.15; font-weight: 700; }
+.lede { color: var(--muted); font-size: 15px; }
+
+/* Card */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.step { font-size: 13px; font-weight: 600; color: var(--muted); }
+.chip {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  padding: 3px 8px; border-radius: 999px;
+  color: var(--warn); background: var(--warn-bg);
+}
+.order h2 { font-size: 20px; line-height: 1.25; font-weight: 700; }
+.order p { color: var(--muted); font-size: 14px; }
+
+.label { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.reports { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; }
+.reports li {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 8px 0; border-top: 1px dashed var(--line); font-size: 14px;
+}
+.reports li span:first-child { color: var(--muted); }
+.reports li b { font-weight: 600; white-space: nowrap; }
+
+/* Price control */
+.price { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.price output { font-size: 32px; font-weight: 700; line-height: 1; color: var(--head); white-space: nowrap; }
+.price output small { font-size: 14px; font-weight: 500; color: var(--muted); }
+.nudge {
+  flex: none; width: 44px; height: 44px; border-radius: 50%;
+  border: 1.5px solid var(--accent); background: transparent; color: var(--accent);
+  font: 600 22px/1 var(--font-body); cursor: pointer;
+}
+.nudge:active { background: var(--band); }
+
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 44px; margin: 0; background: transparent; cursor: pointer; display: block;
+}
+input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: var(--line); }
+input[type="range"]::-moz-range-track { height: 6px; border-radius: 3px; background: var(--line); }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 28px; height: 28px; margin-top: -11px; border-radius: 50%;
+  background: var(--btn-bg); border: 3px solid var(--surface); box-shadow: 0 0 0 1.5px var(--btn-bg);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--btn-bg); border: 3px solid var(--surface); box-shadow: 0 0 0 1.5px var(--btn-bg);
+}
+
+/* Range axis: same scale as the slider (14px = half the thumb) */
+.axis { padding: 0 14px; }
+.axis-in { position: relative; height: 84px; }
+.lane {
+  position: absolute; left: 0; right: 0; top: 0; height: 40px;
+  border-radius: 8px; border: 1px dashed var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--muted);
+}
+.axis.open .lane { border-style: solid; }
+.band { position: absolute; top: 0; height: 40px; background: var(--band); border-radius: 8px; }
+.ref { position: absolute; top: -4px; height: 48px; width: 2px; margin-left: -1px; background: var(--accent); }
+.dot {
+  position: absolute; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%;
+  background: var(--accent); opacity: .55;
+}
+.me { position: absolute; top: -8px; height: 56px; width: 3px; margin-left: -1.5px; background: var(--ink); border-radius: 2px; }
+.me::before {
+  content: ""; position: absolute; left: 50%; top: -5px; width: 11px; height: 11px; margin-left: -5.5px;
+  border-radius: 50%; background: var(--ink);
+}
+.tick { position: absolute; top: 52px; transform: translateX(-50%); text-align: center; line-height: 1.2; }
+.tick i { display: block; font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--muted); }
+.tick b { font-size: 14px; font-weight: 600; }
+.tick.is-ref b { color: var(--accent); }
+.legend { font-size: 12px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+.legend span::before {
+  content: ""; display: inline-block; vertical-align: middle; margin-right: 6px;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--accent); opacity: .55;
+}
+.legend span.you::before { width: 3px; height: 12px; border-radius: 2px; background: var(--ink); opacity: 1; }
+
+/* Verdict */
+.verdict { border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.verdict.ok { background: var(--ok-bg); border-left: 4px solid var(--ok); }
+.verdict.warn { background: var(--warn-bg); border-left: 4px solid var(--warn); }
+.verdict strong { font-size: 15px; font-weight: 700; }
+.verdict.ok strong { color: var(--ok); }
+.verdict.warn strong { color: var(--warn); }
+.verdict span { font-size: 14px; }
+.blind { font-size: 13px; color: var(--muted); }
+
+.btn {
+  width: 100%; min-height: 50px; border: 0; border-radius: 12px;
+  background: var(--btn-bg); color: var(--btn-ink);
+  font: 600 16px/1.2 var(--font-body); cursor: pointer;
+}
+.btn.ghost { background: transparent; color: var(--accent); border: 1.5px solid var(--accent); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+/* Final tally */
+.tally { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.tally li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.tally li b { font-weight: 600; }
+.tally li small { color: var(--muted); font-size: 13px; }
+.pill { align-self: center; grid-row: span 2; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.pill.ok { color: var(--ok); background: var(--ok-bg); }
+.pill.warn { color: var(--warn); background: var(--warn-bg); }
+.big { font-size: 34px; font-weight: 700; line-height: 1.1; color: var(--head); }
+
+/* Summary */
+.sum { display: flex; flex-direction: column; gap: 20px; }
+.sum > h2 { font-size: 22px; font-weight: 700; }
+.block { display: flex; flex-direction: column; gap: 8px; padding-top: 16px; border-top: 2px solid var(--head); }
+.block h3 { font-size: 19px; line-height: 1.25; font-weight: 700; }
+.block p { font-size: 15px; max-width: 65ch; }
+.steps { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.steps li { display: grid; grid-template-columns: 32px 1fr; gap: 12px; align-items: start; }
+.steps .n {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--btn-bg); color: var(--btn-ink);
+  display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px;
+}
+.steps b { display: block; font-weight: 600; }
+.steps span { font-size: 14px; color: var(--muted); }
+.tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 4px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.tile b { display: block; font-size: 21px; font-weight: 700; line-height: 1.2; color: var(--head); white-space: nowrap; }
+.tile span { font-size: 13px; color: var(--muted); line-height: 1.3; display: block; }
+.note { font-size: 13px; color: var(--muted); }
+footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (max-width: 360px) {
+  h1 { font-size: 24px; }
+  .price output { font-size: 27px; }
+  .tile b { font-size: 18px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .band, .verdict { animation: rise .25s ease-out; }
+  @keyframes rise { from { transform: translateY(4px); } to { transform: none; } }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="top">
+    <div class="brand">
+      <span class="mark">Coti AI</span>
+      <span class="event">Semilla Lab 2026</span>
+    </div>
+    <h1>¿A qué precio cotizarías?</h1>
+    <p class="lede">Tres pedidos de ejemplo. Pon tu precio y mira el rango.</p>
+  </header>
+
+  <main id="game" class="card" aria-live="polite"></main>
+
+  <section class="sum" aria-labelledby="sum-title">
+    <h2 id="sum-title">Coti AI en un minuto</h2>
+
+    <div class="block">
+      <span class="label">El problema</span>
+      <h3>Mismo producto, misma semana: USD 30 mil de diferencia</h3>
+      <p>Dos pedidos con el mismo material, volumen e Incoterm. La información de precios está en reportes aislados, con fechas de corte y fuentes distintas.</p>
+    </div>
+
+    <div class="block">
+      <span class="label">La solución</span>
+      <h3>Un rango de precio a la vista antes de cerrar</h3>
+      <ol class="steps">
+        <li><span class="n">1</span><div><b>Busca comparables</b><span>Situaciones muy parecidas en el historial de ventas.</span></div></li>
+        <li><span class="n">2</span><div><b>Muestra un rango</b><span>Mínimo, referencia y máximo, al cotizar.</span></div></li>
+        <li><span class="n">3</span><div><b>Avisa antes de cerrar</b><span>Si el precio queda fuera del rango.</span></div></li>
+      </ol>
+      <p>Coti AI no pone el precio. El ejecutivo comercial decide.</p>
+    </div>
+
+    <div class="block">
+      <span class="label">El negocio</span>
+      <h3>USD 10 mil y 6 meses para medir USD 100 mil al año</h3>
+      <div class="tiles num">
+        <div class="tile"><b>USD 10 mil</b><span>inversión inicial, 2027</span></div>
+        <div class="tile"><b>6 meses</b><span>piloto medido</span></div>
+        <div class="tile"><b>USD 100 mil</b><span>beneficio anual meta, desde 2030</span></div>
+        <div class="tile"><b>USD 351 mil</b><span>valor actual neto</span></div>
+        <div class="tile"><b>231 %</b><span>tasa interna de retorno</span></div>
+        <div class="tile"><b>0,81 años</b><span>tiempo de recuperación</span></div>
+      </div>
+      <p class="note">Cifras a la meta. La meta se confirma en el piloto.</p>
+    </div>
+  </section>
+
+  <footer>
+    El juego usa datos ilustrativos: no son precios ni pedidos reales. La pantalla es una maqueta de la propuesta.
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Illustrative orders. Invented numbers, not real prices.
+  var ROUNDS = [
+    {
+      title: "Arándano · EE. UU. · mayorista", terms: "FCA", kg: 16000,
+      lo: 5.5, hi: 9.5, start: 6.4, min: 6.8, ref: 7.5, max: 8.2,
+      reports: [["Reporte de mercado · hace 9 días", 6.9], ["Reporte interno · hace 4 días", 7.8], ["Fuente externa · ayer", 7.2]],
+      comps: [6.55, 6.85, 6.95, 7.1, 7.2, 7.3, 7.4, 7.5, 7.55, 7.65, 7.8, 7.95, 8.15, 8.45]
+    },
+    {
+      title: "Palta Hass · Europa · supermercado", terms: "CIF", kg: 22000,
+      lo: 1.4, hi: 3.0, start: 2.6, min: 1.95, ref: 2.2, max: 2.45,
+      reports: [["Reporte de mercado · hace 12 días", 2.4], ["Reporte interno · hace 5 días", 2.05], ["Fuente externa · hace 2 días", 1.9]],
+      comps: [1.85, 1.98, 2.02, 2.08, 2.12, 2.18, 2.2, 2.24, 2.28, 2.33, 2.38, 2.44, 2.52]
+    },
+    {
+      title: "Arándano · Europa · mayorista", terms: "FCA", kg: 12000,
+      lo: 6.5, hi: 11.5, start: 8.0, min: 8.1, ref: 8.9, max: 9.7,
+      reports: [["Reporte de mercado · hace 7 días", 9.4], ["Reporte interno · hace 3 días", 8.3], ["Fuente externa · ayer", 8.8]],
+      comps: [7.8, 8.15, 8.3, 8.5, 8.65, 8.8, 8.9, 8.95, 9.1, 9.25, 9.4, 9.65, 10.0]
+    }
+  ];
+  var STEP = 0.05;
+  var game = document.getElementById("game");
+  var state = { i: 0, open: false, blind: [] };
+
+  function price(n) { return n.toFixed(2).replace(".", ","); }
+  function whole(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+  function round2(n) { return Math.round(n * 100) / 100; }
+  function pct(r, v) { return ((v - r.lo) / (r.hi - r.lo) * 100) + "%"; }
+  function inRange(r, v) { return v >= r.min - 1e-9 && v <= r.max + 1e-9; }
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html != null) e.innerHTML = html;
+    return e;
+  }
+
+  function verdictHtml(r, v) {
+    var diff = Math.round((v - r.ref) * r.kg);
+    var gap = diff === 0
+      ? "Igual a la referencia."
+      : "USD " + whole(Math.abs(diff)) + (diff < 0 ? " menos" : " más") + " que la referencia en este pedido.";
+    return inRange(r, v)
+      ? { cls: "verdict ok", html: "<strong>Dentro del rango</strong><span class=\"num\">" + gap + "</span>" }
+      : { cls: "verdict warn", html: "<strong>Fuera de rango: revisa antes de cerrar</strong><span class=\"num\">" + gap + "</span>" };
+  }
+
+  function renderRound() {
+    var r = ROUNDS[state.i];
+    var last = state.i === ROUNDS.length - 1;
+    game.innerHTML = "";
+
+    var head = el("div", "row");
+    head.appendChild(el("span", "step", "Pedido " + (state.i + 1) + " de " + ROUNDS.length));
+    head.appendChild(el("span", "chip", "ILUSTRATIVO"));
+    game.appendChild(head);
+
+    game.appendChild(el("div", "order",
+      "<h2>" + r.title + "</h2><p class=\"num\">" + r.terms + " · " + whole(r.kg) + " kg</p>"));
+
+    var rep = el("div", null, "<span class=\"label\">Lo que tienes hoy · USD/kg</span>");
+    var ul = el("ul", "reports num");
+    r.reports.forEach(function (x) {
+      ul.appendChild(el("li", null, "<span>" + x[0] + "</span><b>" + price(x[1]) + "</b>"));
+    });
+    rep.appendChild(ul);
+    game.appendChild(rep);
+
+    var ctl = el("div");
+    ctl.appendChild(el("label", "label", "Tu precio")).setAttribute("for", "precio");
+    var pr = el("div", "price");
+    var minus = el("button", "nudge", "−"); minus.type = "button"; minus.setAttribute("aria-label", "Bajar 5 centavos");
+    var out = el("output", "num"); out.id = "precio-valor"; out.setAttribute("for", "precio");
+    var plus = el("button", "nudge", "+"); plus.type = "button"; plus.setAttribute("aria-label", "Subir 5 centavos");
+    pr.appendChild(minus); pr.appendChild(out); pr.appendChild(plus);
+    ctl.appendChild(pr);
+    var slider = el("input");
+    slider.type = "range"; slider.id = "precio";
+    slider.min = r.lo; slider.max = r.hi; slider.step = STEP; slider.value = r.start;
+    ctl.appendChild(slider);
+
+    var axis = el("div", "axis");
+    var inner = el("div", "axis-in");
+    var lane = el("div", "lane", "Aquí aparece el rango");
+    var me = el("div", "me");
+    inner.appendChild(lane); inner.appendChild(me);
+    axis.appendChild(inner);
+    ctl.appendChild(axis);
+    game.appendChild(ctl);
+
+    var verdict = el("div"); verdict.hidden = true;
+    game.appendChild(verdict);
+    var blind = el("p", "blind num"); blind.hidden = true;
+    game.appendChild(blind);
+
+    var btn = el("button", "btn", "Ver el rango"); btn.type = "button";
+    game.appendChild(btn);
+
+    function value() { return round2(parseFloat(slider.value)); }
+    function paint() {
+      var v = value();
+      out.innerHTML = "<small>USD</small> " + price(v) + " <small>/kg</small>";
+      me.style.left = pct(r, v);
+      if (state.open) {
+        var vd = verdictHtml(r, v);
+        verdict.className = vd.cls; verdict.innerHTML = vd.html;
+      }
+    }
+    function nudge(d) {
+      slider.value = Math.min(r.hi, Math.max(r.lo, round2(value() + d)));
+      paint();
+    }
+    slider.addEventListener("input", paint);
+    minus.addEventListener("click", function () { nudge(-STEP); });
+    plus.addEventListener("click", function () { nudge(STEP); });
+
+    btn.addEventListener("click", function () {
+      if (!state.open) {
+        state.open = true;
+        state.blind[state.i] = value();
+        axis.classList.add("open");
+        lane.textContent = "";
+        var band = el("div", "band");
+        band.style.left = pct(r, r.min);
+        band.style.width = ((r.max - r.min) / (r.hi - r.lo) * 100) + "%";
+        inner.insertBefore(band, me);
+        r.comps.forEach(function (c, k) {
+          var d = el("div", "dot");
+          d.style.left = pct(r, c);
+          d.style.top = (6 + (k * 11) % 24) + "px";
+          inner.insertBefore(d, me);
+        });
+        var ref = el("div", "ref"); ref.style.left = pct(r, r.ref);
+        inner.insertBefore(ref, me);
+        [["MÍN", r.min, ""], ["REF", r.ref, " is-ref"], ["MÁX", r.max, ""]].forEach(function (t) {
+          var k = el("div", "tick num" + t[2], "<i>" + t[0] + "</i><b>" + price(t[1]) + "</b>");
+          k.style.left = pct(r, t[1]);
+          inner.appendChild(k);
+        });
+        ctl.appendChild(el("div", "legend", "<span>Pedidos comparables</span><span class=\"you\">Tu precio</span>"));
+        verdict.hidden = false;
+        blind.hidden = false;
+        blind.textContent = "A ciegas pusiste USD " + price(state.blind[state.i]) + "/kg. Mueve el precio y mira el aviso.";
+        btn.textContent = last ? "Ver mi resultado" : "Siguiente pedido";
+        paint();
+      } else if (!last) {
+        state.i += 1; state.open = false;
+        renderRound();
+        game.scrollIntoView({ block: "start" });
+      } else {
+        renderTally();
+        game.scrollIntoView({ block: "start" });
+      }
+    });
+
+    paint();
+  }
+
+  function renderTally() {
+    var hits = 0, dist = 0;
+    game.innerHTML = "";
+    var head = el("div", "row");
+    head.appendChild(el("span", "step", "Tu resultado a ciegas"));
+    head.appendChild(el("span", "chip", "ILUSTRATIVO"));
+    game.appendChild(head);
+
+    var ul = el("ul", "tally num");
+    ROUNDS.forEach(function (r, k) {
+      var v = state.blind[k], ok = inRange(r, v);
+      if (ok) hits += 1;
+      dist += Math.abs(Math.round((v - r.ref) * r.kg));
+      ul.appendChild(el("li", null,
+        "<b>" + r.title + "</b><span class=\"pill " + (ok ? "ok" : "warn") + "\">" + (ok ? "Dentro" : "Fuera") + "</span>" +
+        "<small>Tu precio " + price(v) + " · rango " + price(r.min) + " a " + price(r.max) + "</small>"));
+    });
+
+    var top = el("div");
+    top.appendChild(el("p", "big num", hits + " de " + ROUNDS.length + " dentro del rango"));
+    top.appendChild(el("p", "num", "USD " + whole(dist) + " de distancia a la referencia, sumando los tres pedidos."));
+    game.appendChild(top);
+    game.appendChild(ul);
+    game.appendChild(el("p", null, "Con el rango a la vista decides con una referencia común. El precio lo sigues poniendo tú."));
+
+    var again = el("button", "btn ghost", "Jugar otra vez"); again.type = "button";
+    again.addEventListener("click", function () {
+      state = { i: 0, open: false, blind: [] };
+      renderRound();
+      game.scrollIntoView({ block: "start" });
+    });
+    game.appendChild(again);
+  }
+
+  renderRound();
+})();
+</script>
+</body>
+</html>
