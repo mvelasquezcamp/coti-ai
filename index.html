@@ -114,8 +114,8 @@ h1, h2, h3 { text-wrap: balance; color: var(--head); }
 .brand { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .mark { font-family: var(--font-mark); font-size: 28px; line-height: 1.2; color: var(--hero-mark); }
 .event { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--hero-soft); }
-.hero h1 { color: var(--hero-ink); font-size: 27px; line-height: 1.15; font-weight: 700; }
-.hero h1 .hot { display: block; color: var(--hot); font-size: 56px; line-height: 1.08; white-space: nowrap; }
+.hero h1 { color: var(--hero-ink); font-size: 34px; line-height: 1.12; font-weight: 700; }
+.hero h1 .hot { display: block; color: var(--hot); }
 .hero p { color: var(--hero-soft); font-size: 16px; }
 .hero p b { color: var(--hero-ink); font-weight: 600; }
 
@@ -177,27 +177,28 @@ input[type="range"]::-moz-range-thumb {
 
 /* Range axis: same scale as the slider (14px = half the thumb) */
 .axis { padding: 0 14px; }
-.axis-in { position: relative; height: 84px; }
+.axis-in { position: relative; height: 102px; }
 .lane {
-  position: absolute; left: 0; right: 0; top: 0; height: 40px;
+  position: absolute; left: 0; right: 0; top: 0; height: 58px;
   border-radius: 8px; border: 1px dashed var(--line);
   display: flex; align-items: center; justify-content: center;
   font-size: 13px; color: var(--muted);
 }
 .axis.open .lane { border-style: solid; }
-.band { position: absolute; top: 0; height: 40px; background: var(--band); border-radius: 6px; }
-.ref { position: absolute; top: -4px; height: 48px; width: 2px; margin-left: -1px; background: var(--accent); }
+.band { position: absolute; top: 0; height: 58px; background: var(--band); border-radius: 6px; box-shadow: inset 0 0 0 1.5px var(--accent); }
+.ref { position: absolute; top: -4px; height: 66px; width: 2px; margin-left: -1px; background: var(--accent); }
 .dot {
   position: absolute; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%;
-  background: var(--accent); opacity: .6;
+  background: var(--accent);
 }
-.me { position: absolute; top: -8px; height: 56px; width: 3px; margin-left: -1.5px; background: var(--ink); border-radius: 2px; }
+.dot.out { background: var(--muted); opacity: .45; }
+.me { position: absolute; top: -8px; height: 74px; width: 3px; margin-left: -1.5px; background: var(--ink); border-radius: 2px; }
 .me::before {
   content: ""; position: absolute; left: 50%; top: -5px; width: 11px; height: 11px; margin-left: -5.5px;
   border-radius: 50%; background: var(--ink);
 }
 /* Mín reads to the left of the band, máx to the right, so a narrow range stays legible */
-.tick { position: absolute; top: 52px; transform: translateX(-50%); text-align: center; line-height: 1.2; }
+.tick { position: absolute; top: 70px; transform: translateX(-50%); text-align: center; line-height: 1.2; }
 .tick.is-min { transform: translateX(-100%); text-align: right; }
 .tick.is-max { transform: none; text-align: left; }
 .tick i { display: block; font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--muted); }
@@ -206,8 +207,9 @@ input[type="range"]::-moz-range-thumb {
 .legend { font-size: 12px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
 .legend span::before {
   content: ""; display: inline-block; vertical-align: middle; margin-right: 6px;
-  width: 7px; height: 7px; border-radius: 50%; background: var(--accent); opacity: .6;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
 }
+.legend span.out::before { background: var(--muted); opacity: .45; }
 .legend span.you::before { width: 3px; height: 12px; border-radius: 2px; background: var(--ink); opacity: 1; }
 
 /* Verdict */
@@ -270,8 +272,7 @@ input[type="range"]::-moz-range-thumb {
 footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
 
 @media (max-width: 360px) {
-  .hero h1 { font-size: 23px; }
-  .hero h1 .hot { font-size: 46px; }
+  .hero h1 { font-size: 28px; }
   .price output { font-size: 27px; }
   .tile b { font-size: 18px; }
 }
@@ -289,8 +290,8 @@ footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line)
       <span class="mark">Coti AI</span>
       <span class="event">Semilla Lab 2026</span>
     </div>
-    <h1>Mismo producto. Misma semana. <span class="hot num">USD 30 mil</span> de diferencia.</h1>
-    <p>Dos pedidos iguales, dos precios. <b>¿A qué precio cotizarías tú?</b></p>
+    <h1>¿A qué precio <span class="hot">cotizarías tú?</span></h1>
+    <p>Tres reportes, tres precios distintos. <b>Pon el tuyo y mira el rango que elige Coti AI.</b></p>
   </header>
 
   <main id="game" class="card" aria-live="polite"></main>
@@ -303,7 +304,7 @@ footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line)
       <h3>El rango de precio a la vista, antes de cerrar</h3>
       <ol class="steps">
         <li><span class="n">1</span><div><b>Busca comparables</b><span>Situaciones muy parecidas en el historial de ventas.</span></div></li>
-        <li><span class="n">2</span><div><b>Muestra un rango</b><span>Mínimo, referencia y máximo, al cotizar.</span></div></li>
+        <li><span class="n">2</span><div><b>Muestra un rango</b><span>Mínimo, referencia y máximo. Los casos alejados quedan fuera.</span></div></li>
         <li><span class="n">3</span><div><b>Avisa antes de cerrar</b><span>Si el precio queda fuera del rango.</span></div></li>
       </ol>
     </div>
@@ -323,7 +324,7 @@ footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line)
     <div class="block">
       <span class="label">Qué pedimos</span>
       <h3>USD 10 mil y 6 meses de piloto</h3>
-      <p>Un tercio de la diferencia entre esos dos pedidos. Piloto medido en 2027: al cierre, seguimos o paramos.</p>
+      <p>Piloto medido en 2027: al cierre, seguimos o paramos.</p>
     </div>
 
     <div class="close">
@@ -344,23 +345,49 @@ footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line)
   var ROUNDS = [
     {
       title: "Arándano · EE. UU. · mayorista", terms: "FCA", kg: 16000,
-      lo: 6.0, hi: 9.0, step: 0.05, start: 6.4, min: 7.2, ref: 7.5, max: 7.8,
-      reports: [["Reporte de mercado · hace 9 días", 6.9], ["Reporte interno · hace 4 días", 7.8], ["Fuente externa · ayer", 7.2]],
-      comps: [7.05, 7.22, 7.28, 7.35, 7.4, 7.45, 7.5, 7.52, 7.58, 7.63, 7.7, 7.76, 7.9]
+      lo: 6.3, hi: 8.7, step: 0.05, start: 6.6, min: 7.2, ref: 7.5, max: 7.8, seed: 11,
+      reports: [["Reporte de mercado · hace 9 días", 6.9], ["Reporte interno · hace 4 días", 7.8], ["Fuente externa · ayer", 7.2]]
     },
     {
       title: "Palta Hass · Europa · supermercado", terms: "CIF", kg: 22000,
-      lo: 1.7, hi: 2.7, step: 0.01, start: 2.5, min: 2.1, ref: 2.2, max: 2.3,
-      reports: [["Reporte de mercado · hace 12 días", 2.4], ["Reporte interno · hace 5 días", 2.05], ["Fuente externa · hace 2 días", 1.9]],
-      comps: [2.06, 2.11, 2.13, 2.16, 2.18, 2.2, 2.21, 2.23, 2.25, 2.27, 2.29, 2.33]
+      lo: 1.8, hi: 2.6, step: 0.01, start: 2.5, min: 2.1, ref: 2.2, max: 2.3, seed: 23,
+      reports: [["Reporte de mercado · hace 12 días", 2.4], ["Reporte interno · hace 5 días", 2.05], ["Fuente externa · hace 2 días", 1.9]]
     },
     {
       title: "Arándano · Europa · mayorista", terms: "FCA", kg: 12000,
-      lo: 7.4, hi: 10.4, step: 0.05, start: 8.0, min: 8.55, ref: 8.9, max: 9.25,
-      reports: [["Reporte de mercado · hace 7 días", 9.4], ["Reporte interno · hace 3 días", 8.3], ["Fuente externa · ayer", 8.8]],
-      comps: [8.4, 8.58, 8.66, 8.74, 8.82, 8.88, 8.92, 8.98, 9.05, 9.12, 9.2, 9.36]
+      lo: 7.5, hi: 10.3, step: 0.05, start: 8.0, min: 8.55, ref: 8.9, max: 9.25, seed: 37,
+      reports: [["Reporte de mercado · hace 7 días", 9.4], ["Reporte interno · hace 3 días", 8.3], ["Fuente externa · ayer", 8.8]]
     }
   ];
+  var N_IN = 28, N_OUT = 14, LANE = 58, DOT = 6;
+
+  // Illustrative comparables: most fall inside the range, the rest stay outside it.
+  function comparables(r) {
+    var s = r.seed;
+    function rnd() { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; }
+    var pts = [], span = r.hi - r.lo, k, v, y, tries, clash;
+    function place(make, inside) {
+      for (tries = 0; tries < 40; tries++) {
+        v = make(); y = 4 + rnd() * (LANE - DOT - 8);
+        clash = pts.some(function (p) {
+          var dx = (p.v - v) / span * 280, dy = p.y - y;
+          return dx * dx + dy * dy < 49;
+        });
+        if (!clash) break;
+      }
+      pts.push({ v: v, y: y, inside: inside });
+    }
+    for (k = 0; k < N_IN; k++) {
+      place(function () { return r.min + (r.max - r.min) * (0.04 + 0.92 * (rnd() + rnd()) / 2); }, true);
+    }
+    for (k = 0; k < N_OUT; k++) {
+      place(k % 2
+        ? function () { return r.min - (r.min - r.lo) * (0.05 + 0.85 * rnd() * rnd()); }
+        : function () { return r.max + (r.hi - r.max) * (0.05 + 0.85 * rnd() * rnd()); }, false);
+    }
+    return pts;
+  }
+
   var game = document.getElementById("game");
   var state = { i: 0, open: false, blind: [] };
 
@@ -465,10 +492,10 @@ footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line)
         band.style.left = pct(r, r.min);
         band.style.width = ((r.max - r.min) / (r.hi - r.lo) * 100) + "%";
         inner.insertBefore(band, me);
-        r.comps.forEach(function (c, k) {
-          var d = el("div", "dot");
-          d.style.left = pct(r, c);
-          d.style.top = (6 + (k * 11) % 26) + "px";
+        comparables(r).forEach(function (p) {
+          var d = el("div", p.inside ? "dot" : "dot out");
+          d.style.left = pct(r, p.v);
+          d.style.top = p.y + "px";
           inner.insertBefore(d, me);
         });
         var ref = el("div", "ref"); ref.style.left = pct(r, r.ref);
@@ -478,7 +505,7 @@ footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line)
           k.style.left = pct(r, t[1]);
           inner.appendChild(k);
         });
-        ctl.appendChild(el("div", "legend", "<span>Pedidos comparables</span><span class=\"you\">Tu precio</span>"));
+        ctl.appendChild(el("div", "legend", "<span>" + N_IN + " comparables en el rango</span><span class=\"out\">" + N_OUT + " fuera</span><span class=\"you\">Tu precio</span>"));
         verdict.hidden = false;
         blind.hidden = false;
         blind.textContent = "A ciegas pusiste USD " + price(state.blind[state.i]) + "/kg. Con Coti AI verías este rango antes de cerrar. Mueve el precio y pruébalo.";
